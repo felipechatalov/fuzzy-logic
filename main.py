@@ -78,12 +78,92 @@ bom + medio + ruim + mtruim=
 
 0.6 -> medio
 '''
-def to_fuzzy(d, m):
-    pass
+
+import random
+
+def qlserv(x):
+
+    r = -3*x + 1.6 
+    r = min(1, max(0, r))
+
+    m1 = 3* x - 0.6
+    m2 = -6*x + 4.6
+    m = max(min(m1, m2, 1), 0)
+
+    b = 6*x-3.6
+    b = min(1, max(0, b))
+
+    return [r, m, b]
+
+
+def velserv(x):
+    r = -3*x +1.2
+    r = min(1, max(0, r))
+
+    m1 = 3 * x - 0.2
+    m2 = 2 - 2 * x
+    m = max(min(m1, m2, 1), 0)
+
+    b = 2 * x - 1
+    b = min(1, max(0, b))
+
+    return [r, m, b]
+
+
+def qlcomida(x):
+    r = -8 * x + 2.6
+    r = min(1, max(0, r))
+
+    m1 = 8 * x - 1.6
+    m2 = -8 * x + 7
+    m = max(min(m1, m2, 1), 0)
+
+    b = 8 * x - 6
+    b = min(1, max(0, b))
+
+    return [r, m, b]
+
+
+def simp(x):
+    r = -8 * x + 1.8
+    r = min(1, max(0, r))
+
+    m1 = 8 * x - 0.8
+    m2 = -6 * x + 5
+    m = max(min(m1, m2, 1), 0)
+
+    b = 6 * x - 4
+    b = min(1, max(0, b))
+
+    return [r, m, b]
+
+def to_fuzzy(x, nome):
+    r,m,b = qlserv(x)
+
+    if nome == "Preço":
+        r,m,b = qlserv(x)
+    elif nome == "Vel. servico":
+        r,m,b = velserv(x)
+    elif nome == "Qual. Comida":
+        r,m,b = qlcomida(x)
+    elif nome == "Simp. Garcom":
+        r,m,b = simp(x)
+    else:
+        print("ERROR: metrica nao encontrada")
+        return
+
+    number = random.random()
+    print(f"rng:{float(number):.2} r:{float(r):.2} m:{float(m):.2} b:{float(b):.2}", end=" ")
+    if number < r:
+        return "Ruim"
+    elif number < (m+r):
+        return "Medio"
+    else:
+        return "Bom"
 
 def fuzzifier(data, metrics):
     r = []
-    for i in range(len(len(data))):
+    for i in range(len(len(metrics))):
         r.append(to_fuzzy(data[i], metrics[i]))
 
     return r
@@ -93,6 +173,9 @@ def fuzzifier(data, metrics):
 # se ql serv for boa, vel do serv for boa, ql da com for boa E simp do garcom for ruim, entao gorjeita ruim
 # se ql serv for ruim, vel do serv for ruim, ql da com for ruim E simp do garcom for boa, entao gorjeita media
 # baseado nas regras (if elses)
+# trabalhar com as palavras (bom, medio, ruim) e nao com os valores absolutos (?)
+# retornar palavra para o defusificador
+# e o defus retorna valor absoluto baseado no range que a palavra representa
 def fuzzy_operations(fuzzy_values):
     pass
 
@@ -106,11 +189,12 @@ def defuzzifier(fuzzy_final):
     pass
 
 
-
+# trocar qual servico por algo mais condinzente com o problema
+# custo, ou algo assim, que trabalhe no lado negativo
 def main():
     # na forma de float entre 0 e 1
     user_inputs = [0.5, 0.6, 0.4, 0.9]
-    metrics = ["Qual. servico", "Vel. servico", "Qual. Comida", "Simp. Garcom"]
+    metrics = ["Preço", "Vel. servico", "Qual. Comida", "Simp. Garcom"]
     
     fuzzy_values = fuzzifier(user_inputs, metrics)
 
@@ -125,19 +209,20 @@ def main():
 
 
 
+for i in range(10):
+    print("vel serv", i, to_fuzzy(i/10, "Vel. servico"))
+print()
 
+for i in range(10):
+    print("ql serv", i, to_fuzzy(i/10, "Qual. servico"))
+print()
+    
+for i in range(10):
+    print("qual com", i, to_fuzzy(i/10, "Qual. Comida"))
+print()
 
-
-
-
-
-
-
-
-
-
-
-
+for i in range(10):
+    print("simp", i, to_fuzzy(i/10, "Simp. Garcom"))
 
 
 
