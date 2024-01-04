@@ -185,6 +185,40 @@ def fuzzy_operations(fuzzy_values):
 # bom = [0, 0.2]
 # medio = [0.2, 0.5] 0.37  * 25 = 9.25
 # ruim = [0.5, 1]
+
+'''
+metodo mamdani:
+https://www.mathworks.com/help/fuzzy/types-of-fuzzy-inference-systems.html
+
+wikipedia: fuzzy logic (mais coisa que na pagina br)
+https://en.wikipedia.org/wiki/Fuzzy_logic
+
+como deveria ser feito:
+- ter um grafico especifico para cada qualidade de cada metrica
+    por ex: um grafico para qualidade ruim de comida, media de comida
+    e boa de comida, etc.
+- seguindo as regras, monta-se um grafico final para cada regra
+    por ex: se a comida for boa ou velocidade boa entao gorjeta eh media
+    teriamos um valor X para colocar no grafico, que recebemos do usuario
+    coloca-se esse x no grafico de comida boa e retornamos um Y, por ex: 0.4
+    mesma coisa acontece para velocidade boa, por ex retorna 0.3
+    como a operacao da regra eh or, fazemos o max entre eles, retorna entao 0.4
+    com esse valor verificamos no grafico de gorjeta media, criamos um novo grafico
+    onde o pegamos todo o valor do grafico ate o valor que tivemos, no caso 0.4
+    nesse caso o graf fica 'cortado'.
+- fazemos o passo anterior para todas as regras que temos, ao final agregamos todos os 
+    graficos;
+- apos conseguir o grafico final, fazemos a defusificação, nesse caso estamos utilizandoi
+    o metodo de mamdani, entao seguimos nele, basta encontrar o centroide
+    do grafico criado, ele retornara um valor absoluto
+
+consideraçoes:
+    nao acho que esteja necessariamente errado como esta snedo feito agora, retornando
+    um valor escrito, porem eh melhor trocar pois dessa forma com o mesmo input
+    temos o mesmo retorno
+'''
+
+
 def defuzzifier(fuzzy_final):
     pass
 
