@@ -27,21 +27,21 @@ def metrica_simp_boa(x):
 
 def gorjeta_ruim(x):
     y1 = 4*x
-    y2 = -4*x-1
+    y2 = -4*x +2
     y = max(min(y1, y2, 1), 0)
-    return limit(y, 0, 1)
+    return y
 
 def gorjeta_media(x):
-    y1 = 4*x-1
-    y2 = -4*x+3
+    y1 = 4*x -1
+    y2 = -4*x +3
     y = max(min(y1, y2, 1), 0)
-    return limit(y, 0, 1)
+    return y
 
 def gorjeta_boa(x):
-    y1 = 4*x-2
-    y2 = -4*x+4
+    y1 = 4*x -2
+    y2 = -4*x +4
     y = max(min(y1, y2, 1), 0)
-    return limit(y, 0, 1)
+    return y
 
 
 
@@ -109,10 +109,25 @@ consideraçoes:
     temos o mesmo retorno
 '''
 
+'''
+centroid = sum( u{xi} * xi ) / ^sum( u{xi} )
+'''
 
-def defuzzifier(fuzzy_final):
+'''
+x -> valor do eixo x
+fuzz_max_val -> valor maximo que o fuzzificador pode retornar
+final_func -> funcao que representa o grafico final ou seja a gorjeta(boa, media ou ruim)
+'''
+def map_func_to_val(x, fuzz_max_val, final_func):
+    return min(final_func(x), fuzz_max_val)
 
-    pass
+def defuzzifier(fuzz_max_val, final_func):
+    step = 0.01
+    final_map = []
+    for i in range(0, int(1/step), 1):
+        final_map.append(map_func_to_val(i*step, fuzz_max_val, final_func))
+
+    return final_map
 
 
 # trocar qual servico por algo mais condinzente com o problema
@@ -134,22 +149,8 @@ def main():
 
 
 
-for i in range(10):
-    print("preco", i, metrica_preco_barato(i/10))
-print()
-
-for i in range(10):
-    print("vel serv", i, metrica_velserv_boa(i/10))
-print()
-    
-for i in range(10):
-    print("qual com", i, metrica_qlserv_boa(i/10))
-print()
-
-for i in range(10):
-    print("simp", i, metrica_simp_boa(i/10))
-
 print(fuzzifier([5, 6, 4, 9]))
 
 
+print(defuzzifier(0.5, gorjeta_ruim))
 
