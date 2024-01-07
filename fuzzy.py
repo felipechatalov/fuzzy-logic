@@ -1,8 +1,6 @@
-import matplotlib.pyplot as plt
 import random
 
 def limit(x, l, h):
-    
         return min(h, max(l, x))
 
 
@@ -58,46 +56,6 @@ def fuzzifier(data):
 
     return final
 
-
-# possivel distribuiçao normal
-# considerando a palavra recebida
-# onde comeca e acaba os valores de gorjeta possivel para cada palavra(ruim, medio, bom)
-# bom = [0, 0.2]
-# medio = [0.2, 0.5] 0.37  * 25 = 9.25
-# ruim = [0.5, 1]
-
-'''
-metodo mamdani:
-https://www.mathworks.com/help/fuzzy/types-of-fuzzy-inference-systems.html
-
-wikipedia: fuzzy logic (mais coisa que na pagina br)
-https://en.wikipedia.org/wiki/Fuzzy_logic
-
-como deveria ser feito:
-- ter um grafico especifico para cada qualidade de cada metrica
-    por ex: um grafico para qualidade ruim de comida, media de comida
-    e boa de comida, etc.
-- seguindo as regras, monta-se um grafico final para cada regra
-    por ex: se a comida for boa ou velocidade boa entao gorjeta eh media
-    teriamos um valor X para colocar no grafico, que recebemos do usuario
-    coloca-se esse x no grafico de comida boa e retornamos um Y, por ex: 0.4
-    mesma coisa acontece para velocidade boa, por ex retorna 0.3
-    como a operacao da regra eh or, fazemos o max entre eles, retorna entao 0.4
-    com esse valor verificamos no grafico de gorjeta media, criamos um novo grafico
-    onde o pegamos todo o valor do grafico ate o valor que tivemos, no caso 0.4
-    nesse caso o graf fica 'cortado'.
-- fazemos o passo anterior para todas as regras que temos, ao final agregamos todos os 
-    graficos;
-- apos conseguir o grafico final, fazemos a defusificação, nesse caso estamos utilizandoi
-    o metodo de mamdani, entao seguimos nele, basta encontrar o centroide
-    do grafico criado, ele retornara um valor absoluto
-
-consideraçoes:
-    nao acho que esteja necessariamente errado como esta snedo feito agora, retornando
-    um valor escrito, porem eh melhor trocar pois dessa forma com o mesmo input
-    temos o mesmo retorno
-'''
-
 '''
 x -> valor do eixo x
 fuzz_max_val -> valor maximo que o fuzzificador pode retornar
@@ -115,42 +73,23 @@ def generate_final_func(fuzz_max_val, final_func, step):
     return final_map
 
 
-# para cada regra, calcula as variaveis e gera o grafico final, que dps sera
-# todos agregados juntos(max entre todos) e enviados ao defuzifier
-# provavelmente precisara de um jeito de fazer varias sem guardar em variavel
-# os valores chegando ja passaram pela fuzificação
+
 def fuzzy_operations(fuzzy_values):
     print(fuzzy_values)
+    # 'resolucao' do grafico final
     step = 0.001
+    # tamanho dos vetores gerados
     size = int(1/step)
+
     grafico_final = []
 
-    # se preco for barato ou simpatia do garcom for boa entao gorjeta eh media
-    preco = fuzzy_values[0]
-    simpatia = fuzzy_values[3]
-    f = max(preco, simpatia)
-    final_gorjeta_media = generate_final_func(f, gorjeta_media, step)
-
-    ########
-    plt.plot(final_gorjeta_media)
-    plt.show()
-    ########
-
-    # se velocidade do servico for boa e qualidade da comida for boa entao gorjeta eh boa
-    vel_serv = fuzzy_values[1]
-    ql_comida = fuzzy_values[2]
-    f = min(vel_serv, ql_comida)
-    final_gorjeta_boa = generate_final_func(f, gorjeta_boa, step)
 
 
-    ########
-    plt.plot(final_gorjeta_boa)
-    plt.show()
-    ########
-
-    # se o preco nao for barato ou a velocidade do servico nao for boa
-    # ou a qualidade da comida nao for boa ou a simpatia do garcom nao for boa
-    # entao gorjeta eh ruim
+    '''
+    Se o PRECO NAO for BARATO ou a VELOCIDADE do servico NAO for RAPIDA
+    ou a QUALIDADE DA COMIDA NAO for BOA ou o GARCOM NAO for SIMPATICO
+    entao a GORJETA eh RUIM
+    '''
     preco = 1-fuzzy_values[0]
     vel_serv = 1-fuzzy_values[1]
     ql_comida = 1-fuzzy_values[2]
@@ -158,19 +97,37 @@ def fuzzy_operations(fuzzy_values):
     f = max(preco, vel_serv, ql_comida, simpatia)
     final_gorjeta_ruim = generate_final_func(f, gorjeta_ruim, step)
 
-    ########
-    plt.plot(final_gorjeta_ruim)
-    plt.show()
-    ########
 
-    # junta todos os graficos
+    '''
+    Se o PRECO for BARATO e o GARCOM for SIMPATICO e a QUALIDADE DA COMIDA nao for BOA 
+    entao a GORJETA eh MEDIA
+    '''
+    preco = fuzzy_values[0]
+    simpatia = fuzzy_values[3]
+    ql_comida = 1-fuzzy_values[2]
+    f = max(preco, simpatia, ql_comida)
+    final_gorjeta_media = generate_final_func(f, gorjeta_media, step)
+
+
+    '''
+    Se a VELOCIDADE do servico for RAPIDA e a QUALIDADE DA COMIDA for BOA
+    ou a QUALIDADE DA COMIDA for BOA e o GARCOM for SIMPATICO
+    entao a GORJETA eh BOA
+    '''
+    vel_serv = fuzzy_values[1]
+    ql_comida = fuzzy_values[2]
+    simpatia = fuzzy_values[3]
+    f = max(min(vel_serv, ql_comida), min(ql_comida, simpatia))
+    final_gorjeta_boa = generate_final_func(f, gorjeta_boa, step)
+
+
+
+
+
+    # pega o maximo entre os 3 graficos
+    # (Agrega os graficos)
     for i in range(size):
         grafico_final.append(max(final_gorjeta_media[i], final_gorjeta_boa[i], final_gorjeta_ruim[i]))
-
-    ########
-    plt.plot(grafico_final)
-    plt.show()
-    ########
 
     return grafico_final
 
@@ -179,6 +136,10 @@ def fuzzy_operations(fuzzy_values):
 
 
 '''
+
+metodo mamdani:
+https://www.mathworks.com/help/fuzzy/types-of-fuzzy-inference-systems.html
+
 centroid = sum( u{xi} * xi ) / ^sum( u{xi} )
 '''
 # recebe um array de X valores, representando a funcao final
@@ -189,22 +150,30 @@ def defuzzifier(func_final):
     for i in range(len(func_final)):
         x += func_final[i] * i
         y += func_final[i]
-    print(x, y)
     return x/y/1000
 
 
-
-# trocar qual servico por algo mais condinzente com o problema
-# custo, ou algo assim, que trabalhe no lado negativo
 def main():
-    #user_inputs = [0.5, 0.6, 0.4, 0.9]
-    user_inputs = [0.6, 0.5, 0.6, 0.8]
-
+    user_inputs = []
     metrics = ["Preço", "Vel. servico", "Qual. Comida", "Simp. Garcom"]
     metrics_tip = ["Ruim", "Media", "Boa"]
 
     metrics_func = [metrica_preco_barato, metrica_velserv_boa, metrica_qlserv_boa, metrica_simp_boa]
     metrrics_tip_func = [gorjeta_ruim, gorjeta_media, gorjeta_boa]
+
+
+    print("Digite de 0 a 1 o quanto achou barato o preco")
+    user_inputs.append(float(input()))
+
+    print("Digite de 0 a 1 o quanto achou rapido o servico")
+    user_inputs.append(float(input()))
+
+    print("Digite de 0 a 1 o quanto achou boa a qualidade da comida")
+    user_inputs.append(float(input()))
+
+    print("Digite de 0 a 1 o quanto achou simpatico o garcom")
+    user_inputs.append(float(input()))
+
 
     # passa os valores do usuario para as funcoes de fuzzificação
     # retorna vetor com os valores difusos
@@ -214,30 +183,51 @@ def main():
     # retorna um vetor com o grafico difuso final
     funcao_final = fuzzy_operations(fuzzy_values)
 
-    ########
-    plt.plot(funcao_final)
-    plt.show()
-    ########
-
-
-
     # recebe um grafico final e retorna o valor absoluto
     abs_value = defuzzifier(funcao_final)
 
-    #talvez o resultado do defuzzifier seja o index da funcao final??
+    print(f"O valor da gorjeta eh: {(abs_value*25):.2f}%")
 
-    return abs_value
-
-
+    return abs_value * 25
 
 
 
-#print(fuzzifier([5, 6, 4, 9]))
+def test():
+    assert fuzzifier([0.6, 0.75, 0.76, 0.64]) == [0.25, 0.95, 1, 0.28]
+    assert defuzzifier([0.25, 0.95, 1, 0.28]) == 0.0015282258064516125
 
-#print(metrica_preco_barato(0.5))
 
-#print(generate_final_func(0.5, gorjeta_ruim))
+    assert metrica_preco_barato(0) == 0
+    assert metrica_preco_barato(0.5) == 0.050000000000000044
+    assert metrica_preco_barato(1) == 1
 
-#print(fuzzy_operations([5, 6, 4, 9]))
 
-print(main())
+    assert metrica_qlserv_boa(0) == 0
+    assert metrica_qlserv_boa(0.5) == 0
+    assert metrica_qlserv_boa(1) == 1
+
+    assert metrica_simp_boa(0) == 0
+    assert metrica_simp_boa(0.5) == 0
+    assert metrica_simp_boa(1) == 1
+
+    assert metrica_velserv_boa(0) == 0 
+    assert metrica_velserv_boa(0.5) == 0.19999999999999996
+    assert metrica_velserv_boa(1) == 1
+
+    assert gorjeta_ruim(0) == 0
+    assert gorjeta_ruim(0.25) == 1.0 
+    assert gorjeta_ruim(0.75) == 0
+
+    assert gorjeta_media(0) == 0
+    assert gorjeta_media(0.5) == 1.0 
+    assert gorjeta_media(1) == 0
+
+    assert gorjeta_boa(0) == 0
+    assert gorjeta_boa(0.75) == 1.0 
+    assert gorjeta_boa(1) == 0
+
+
+if __name__ == "__main__":
+    test()
+
+    main()
