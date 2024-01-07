@@ -1,4 +1,4 @@
-
+import matplotlib.pyplot as plt
 import random
 
 def limit(x, l, h):
@@ -51,24 +51,13 @@ def gorjeta_boa(x):
 def fuzzifier(data):
     final = []
 
-    final.append(metrica_preco_barato(data[0]/10))
-    final.append(metrica_velserv_boa(data[1]/10))
-    final.append(metrica_qlserv_boa(data[2]/10))
-    final.append(metrica_simp_boa(data[3]/10))
+    final.append(metrica_preco_barato(data[0]))
+    final.append(metrica_velserv_boa(data[1]))
+    final.append(metrica_qlserv_boa(data[2]))
+    final.append(metrica_simp_boa(data[3]))
 
     return final
 
-# ???????
-# talvez um peso para cada metrica
-# se ql serv for boa, vel do serv for boa, ql da com for boa E simp do garcom for ruim, entao gorjeita ruim
-# se ql serv for ruim, vel do serv for ruim, ql da com for ruim E simp do garcom for boa, entao gorjeita media
-# baseado nas regras (if elses)
-# trabalhar com as palavras (bom, medio, ruim) e nao com os valores absolutos (?)
-# retornar palavra para o defusificador
-# e o defus retorna valor absoluto baseado no range que a palavra representa
-def fuzzy_operations(fuzzy_values):
-
-    pass
 
 # possivel distribuiçao normal
 # considerando a palavra recebida
@@ -110,47 +99,145 @@ consideraçoes:
 '''
 
 '''
-centroid = sum( u{xi} * xi ) / ^sum( u{xi} )
-'''
-
-'''
 x -> valor do eixo x
 fuzz_max_val -> valor maximo que o fuzzificador pode retornar
 final_func -> funcao que representa o grafico final ou seja a gorjeta(boa, media ou ruim)
 '''
-def map_func_to_val(x, fuzz_max_val, final_func):
+def get_func_to_val(x, fuzz_max_val, final_func):
     return min(final_func(x), fuzz_max_val)
 
-def defuzzifier(fuzz_max_val, final_func):
-    step = 0.01
+def generate_final_func(fuzz_max_val, final_func, step):
     final_map = []
+
     for i in range(0, int(1/step), 1):
-        final_map.append(map_func_to_val(i*step, fuzz_max_val, final_func))
+        final_map.append(get_func_to_val(i*step, fuzz_max_val, final_func))
 
     return final_map
+
+
+# para cada regra, calcula as variaveis e gera o grafico final, que dps sera
+# todos agregados juntos(max entre todos) e enviados ao defuzifier
+# provavelmente precisara de um jeito de fazer varias sem guardar em variavel
+# os valores chegando ja passaram pela fuzificação
+def fuzzy_operations(fuzzy_values):
+    print(fuzzy_values)
+    step = 0.001
+    size = int(1/step)
+    grafico_final = []
+
+    # se preco for barato ou simpatia do garcom for boa entao gorjeta eh media
+    preco = fuzzy_values[0]
+    simpatia = fuzzy_values[3]
+    f = max(preco, simpatia)
+    final_gorjeta_media = generate_final_func(f, gorjeta_media, step)
+
+    ########
+    plt.plot(final_gorjeta_media)
+    plt.show()
+    ########
+
+    # se velocidade do servico for boa e qualidade da comida for boa entao gorjeta eh boa
+    vel_serv = fuzzy_values[1]
+    ql_comida = fuzzy_values[2]
+    f = min(vel_serv, ql_comida)
+    final_gorjeta_boa = generate_final_func(f, gorjeta_boa, step)
+
+
+    ########
+    plt.plot(final_gorjeta_boa)
+    plt.show()
+    ########
+
+    # se o preco nao for barato ou a velocidade do servico nao for boa
+    # ou a qualidade da comida nao for boa ou a simpatia do garcom nao for boa
+    # entao gorjeta eh ruim
+    preco = 1-fuzzy_values[0]
+    vel_serv = 1-fuzzy_values[1]
+    ql_comida = 1-fuzzy_values[2]
+    simpatia = 1-fuzzy_values[3]
+    f = max(preco, vel_serv, ql_comida, simpatia)
+    final_gorjeta_ruim = generate_final_func(f, gorjeta_ruim, step)
+
+    ########
+    plt.plot(final_gorjeta_ruim)
+    plt.show()
+    ########
+
+    # junta todos os graficos
+    for i in range(size):
+        grafico_final.append(max(final_gorjeta_media[i], final_gorjeta_boa[i], final_gorjeta_ruim[i]))
+
+    ########
+    plt.plot(grafico_final)
+    plt.show()
+    ########
+
+    return grafico_final
+
+
+
+
+
+'''
+centroid = sum( u{xi} * xi ) / ^sum( u{xi} )
+'''
+# recebe um array de X valores, representando a funcao final
+# a funcao calcula o centroid e retorna o valor encontrado
+def defuzzifier(func_final):
+    x = 0
+    y = 0
+    for i in range(len(func_final)):
+        x += func_final[i] * i
+        y += func_final[i]
+    print(x, y)
+    return x/y/1000
+
 
 
 # trocar qual servico por algo mais condinzente com o problema
 # custo, ou algo assim, que trabalhe no lado negativo
 def main():
-    # na forma de float entre 0 e 1
-    user_inputs = [5, 6, 4, 9]
+    #user_inputs = [0.5, 0.6, 0.4, 0.9]
+    user_inputs = [0.6, 0.5, 0.6, 0.8]
+
     metrics = ["Preço", "Vel. servico", "Qual. Comida", "Simp. Garcom"]
-    
+    metrics_tip = ["Ruim", "Media", "Boa"]
+
+    metrics_func = [metrica_preco_barato, metrica_velserv_boa, metrica_qlserv_boa, metrica_simp_boa]
+    metrrics_tip_func = [gorjeta_ruim, gorjeta_media, gorjeta_boa]
+
+    # passa os valores do usuario para as funcoes de fuzzificação
+    # retorna vetor com os valores difusos
     fuzzy_values = fuzzifier(user_inputs)
 
-    fuzzy_final = fuzzy_operations(fuzzy_values)
+    # realiza as operacoes e implicações
+    # retorna um vetor com o grafico difuso final
+    funcao_final = fuzzy_operations(fuzzy_values)
 
-    abs_value = defuzzifier(fuzzy_final)
-
-    return abs_value * 25
-
-
-
-
-
-print(fuzzifier([5, 6, 4, 9]))
+    ########
+    plt.plot(funcao_final)
+    plt.show()
+    ########
 
 
-print(defuzzifier(0.5, gorjeta_ruim))
 
+    # recebe um grafico final e retorna o valor absoluto
+    abs_value = defuzzifier(funcao_final)
+
+    #talvez o resultado do defuzzifier seja o index da funcao final??
+
+    return abs_value
+
+
+
+
+
+#print(fuzzifier([5, 6, 4, 9]))
+
+#print(metrica_preco_barato(0.5))
+
+#print(generate_final_func(0.5, gorjeta_ruim))
+
+#print(fuzzy_operations([5, 6, 4, 9]))
+
+print(main())
