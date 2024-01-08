@@ -1,5 +1,3 @@
-import random
-
 def limit(x, l, h):
         return min(h, max(l, x))
 
@@ -105,7 +103,7 @@ def fuzzy_operations(fuzzy_values):
     preco = fuzzy_values[0]
     simpatia = fuzzy_values[3]
     ql_comida = 1-fuzzy_values[2]
-    f = max(preco, simpatia, ql_comida)
+    f = min(preco, simpatia, ql_comida)
     final_gorjeta_media = generate_final_func(f, gorjeta_media, step)
 
 
@@ -139,7 +137,6 @@ def fuzzy_operations(fuzzy_values):
 
 metodo mamdani:
 https://www.mathworks.com/help/fuzzy/types-of-fuzzy-inference-systems.html
-
 centroid = sum( u{xi} * xi ) / ^sum( u{xi} )
 '''
 # recebe um array de X valores, representando a funcao final
@@ -152,15 +149,24 @@ def defuzzifier(func_final):
         y += func_final[i]
     return x/y/1000
 
+'''
+Metricas para avaliar o valor da gorjeta:
+    - Preço (Quao barato) de 0.0 a 1.0
+    - Velocidade do servico (Quao rapido) de 0.0 a 1.0
+    - Qualidade da comida (Quao boa) de 0.0 a 1.0
+    - Simpatia do garcom (Quao simpatico) de 0.0 a 1.0
+
+Tipos de gorjeta (entre 0% e 25%):
+    - Ruim (Funcao triangular com pico em 0.25)
+    - Media (Funcao triangular com pico em 0.5)
+    - Boa (Funcao triangular com pico em 0.75)
+'''
 
 def main():
+
+    print("Programa para calcular o valor da gorjeta para um garcom utilizando logica fuzzy")
+
     user_inputs = []
-    metrics = ["Preço", "Vel. servico", "Qual. Comida", "Simp. Garcom"]
-    metrics_tip = ["Ruim", "Media", "Boa"]
-
-    metrics_func = [metrica_preco_barato, metrica_velserv_boa, metrica_qlserv_boa, metrica_simp_boa]
-    metrrics_tip_func = [gorjeta_ruim, gorjeta_media, gorjeta_boa]
-
 
     print("Digite de 0 a 1 o quanto achou barato o preco")
     user_inputs.append(float(input()))
@@ -226,8 +232,8 @@ def test():
     assert gorjeta_boa(0.75) == 1.0 
     assert gorjeta_boa(1) == 0
 
-
 if __name__ == "__main__":
     test()
 
     main()
+
